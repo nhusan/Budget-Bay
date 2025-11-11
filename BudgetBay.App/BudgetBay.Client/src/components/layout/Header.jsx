@@ -1,6 +1,5 @@
-import React, { useContext } from 'react';
 import { Link, useLocation , useNavigate } from 'react-router-dom';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useAuth } from '../../hooks/useAuth';
 import logo from '../../assets/logo-row.png';
 import './Header.css';
 
@@ -8,7 +7,7 @@ const Header = () => {
     const location = useLocation();
     const currentPath = location.pathname;
     const navigate = useNavigate();
-    const { user, logout } = useContext(AuthContext);
+    const { user, logout } = useAuth();
 
     const handleSignOut = () => {
         logout();

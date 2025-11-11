@@ -1,29 +1,26 @@
-import { useState, useContext } from "react";
-import { useNavigate, Navigate, Link } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
+import { useState } from "react";
+import { Navigate, Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
+import { useLogin } from "../../hooks/auth.hooks"; // <-- Import the new hook
 import styles from './LoginPage.module.css';
-// import logo from '../../assets/logo.svg'; 
 
 const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const { token, login, loading } = useContext(AuthContext);
-    const navigate = useNavigate();
+    const { token } = useAuth(); // We still need the token to check if user is already logged in
 
+    // Initialize the useLogin mutation hook
+    const loginMutation = useLogin();
+
+    // If a user with a token lands here, redirect them
     if (token) {
         return <Navigate to="/" replace />;
     }
 
-    const handleLogin = async (e) => {
+    // The handler now triggers the mutation
+    const handleLogin = (e) => {
         e.preventDefault();
-        setError("");
-        const success = await login(email, password);
-        if (success) {
-            navigate("/");
-        } else {
-            setError("Login failed. Please check your credentials.");
-        }
+        loginMutation.mutate({ email, password });
     };
 
     return (
@@ -32,7 +29,6 @@ const LoginPage = () => {
 
             <div className={styles.rightPanel}>
                 <div className={styles.loginContent}>
-                    {/* <img src={logo} alt="Budget Bay Logo" className={styles.logo} /> */}
                     <h1>BUDGET BAY</h1>
                     <p className={styles.subtitle}>Login to start bidding</p>
                     
@@ -58,10 +54,16 @@ const LoginPage = () => {
                             />
                         </div>
                         
-                        {error && <p className={styles.errorMessage}>{error}</p>}
+                        {/* Display error message from the mutation hook */}
+                        {loginMutation.isError && (
+                            <p className={styles.errorMessage}>
+                                {loginMutation.error.message || "Login failed. Please check your credentials."}
+                            </p>
+                        )}
                         
-                        <button type="submit" className={styles.loginButton} disabled={loading}>
-                            {loading ? 'Logging in...' : 'Login'}
+                        {/* Use the mutation's pending state for the button */}
+                        <button type="submit" className={styles.loginButton} disabled={loginMutation.isPending}>
+                            {loginMutation.isPending ? 'Logging in...' : 'Login'}
                         </button>
                     </form>
 

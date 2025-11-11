@@ -1,15 +1,16 @@
-import { useContext, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "./EditForm.css";
-import { AuthContext } from "../../contexts/AuthContext";
-import { getProductById, updateProduct } from "../../services/apiClient";
+import { useProduct, useUpdateProduct } from "../../hooks/product.hooks";
 
 
 const EditForm = () => {
-  const { token, user } = useContext(AuthContext);
   const { productId } = useParams();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+
+  const { data: product, isLoading: isLoadingProduct, error: productError } = useProduct(productId);
+  const updateProductMutation = useUpdateProduct();
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -19,97 +20,68 @@ const EditForm = () => {
     startingPrice: "",
     currentPrice: "",
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); 
 
-  // Load existing product data
+  // Populate form state when product data is loaded
   useEffect(() => {
-    const loadProduct = async () => {
-      try {
-        const product = await getProductById(productId);
-        setFormData({
-          name: product.name || "",
-          description: product.description || "",
-          imageUrl: product.imageUrl || "",
-          condition: product.condition !== undefined ? product.condition.toString() : "0",
-          endTime: product.endTime ? new Date(product.endTime).toISOString().slice(0, 16) : "",
-          startingPrice: product.startingPrice ? product.startingPrice.toString() : "",
-          currentPrice: product.currentPrice ? product.currentPrice.toString() : "",
-        });
-      } catch (error) {
-        console.error("Error loading product:", error);
-        setMessage("❌ Failed to load product data");
-        setMessageType("error");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (productId) {
-      loadProduct();
+    if (product) {
+      setFormData({
+        name: product.name || "",
+        description: product.description || "",
+        imageUrl: product.imageUrl || "",
+        condition: product.condition !== undefined ? (product.condition === 'New' ? "0" : "1") : "0",
+        endTime: product.endTime ? new Date(product.endTime).toISOString().slice(0, 16) : "",
+        startingPrice: product.startingPrice?.toString() || "",
+        currentPrice: product.currentPrice?.toString() || "",
+      });
     }
-  }, [productId]);
+  }, [product]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleDateTimeChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-    e.target.blur();
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    setMessage("");
-    setMessageType("");
+    // Prepare data according to UpdateProductDto
+    const updateData = {
+      name: formData.name || null,
+      description: formData.description || null,
+      imageUrl: formData.imageUrl || null,
+      condition: parseInt(formData.condition) || 0,
+      endTime: formData.endTime ? new Date(formData.endTime).toISOString() : null,
+      startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : null,
+      currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : null,
+    };
 
-    try {
-      // Prepare data according to UpdateProductDto
-      const updateData = {
-        name: formData.name || null,
-        description: formData.description || null,
-        imageUrl: formData.imageUrl || null,
-        condition: parseInt(formData.condition) || 0, // Convert to enum value
-        endTime: formData.endTime ? new Date(formData.endTime).toISOString() : null,
-        startingPrice: formData.startingPrice ? parseFloat(formData.startingPrice) : null,
-        currentPrice: formData.currentPrice ? parseFloat(formData.currentPrice) : null,
-      };
-
-      await updateProduct(productId, updateData, token);
-      
-      setMessage("✅ Product updated successfully!");
-      setMessageType("success");
-      
-      setTimeout(() => {
-        navigate(`/products/${productId}`);
-      }, 2000);
-      
-    } catch (error) {
-      console.error("Error:", error);
-      setMessage("❌ Failed to update product");
-      setMessageType("error");
-    }
+    updateProductMutation.mutate({ productId, data: updateData }, {
+        onSuccess: () => {
+             setTimeout(() => {
+                navigate(`/products/${productId}`);
+            }, 2000);
+        }
+    });
   };
 
-  if (loading) {
+  if (isLoadingProduct) {
     return <div className="loading">Loading product data...</div>;
+  }
+
+  if (productError) {
+      return <div className="message error">Failed to load product data: {productError.message}</div>
   }
 
   return (
     <form className="edit-form" onSubmit={handleSubmit}>
-      {message && (
-        <div className={`message ${messageType}`}>
-          {message}
+      {updateProductMutation.isSuccess && (
+        <div className="message success">
+          Product updated successfully! Redirecting...
+        </div>
+      )}
+       {updateProductMutation.isError && (
+        <div className="message error">
+          Failed to update product: {updateProductMutation.error.message}
         </div>
       )}
 
@@ -119,6 +91,7 @@ const EditForm = () => {
         name="name"
         value={formData.name}
         onChange={handleChange}
+        disabled={updateProductMutation.isPending}
       />
 
       <label>Description</label>
@@ -126,6 +99,7 @@ const EditForm = () => {
         name="description"
         value={formData.description}
         onChange={handleChange}
+        disabled={updateProductMutation.isPending}
       />
 
       <label>Image URL</label>
@@ -135,6 +109,7 @@ const EditForm = () => {
         value={formData.imageUrl}
         onChange={handleChange} 
         placeholder="https://example.com/image.jpg"
+        disabled={updateProductMutation.isPending}
       />
 
       <label>Condition</label>
@@ -142,6 +117,7 @@ const EditForm = () => {
         name="condition"
         value={formData.condition}
         onChange={handleChange}
+        disabled={updateProductMutation.isPending}
       >
         <option value="0">New</option>
         <option value="1">Used</option>
@@ -152,7 +128,8 @@ const EditForm = () => {
         type="datetime-local"
         name="endTime"
         value={formData.endTime}
-        onChange={handleDateTimeChange}
+        onChange={handleChange}
+        disabled={updateProductMutation.isPending}
       />
 
       <label>Starting Price</label>
@@ -164,6 +141,7 @@ const EditForm = () => {
         min="0.01"
         step="0.01"
         placeholder="0.01"
+        disabled={updateProductMutation.isPending}
       />
 
       <label>Current Price</label>
@@ -175,9 +153,12 @@ const EditForm = () => {
         min="0.01"
         step="0.01"
         placeholder="0.01"
+        disabled={updateProductMutation.isPending}
       />
 
-      <button type="submit">Update Product</button>
+      <button type="submit" disabled={updateProductMutation.isPending}>
+          {updateProductMutation.isPending ? 'Updating...' : 'Update Product'}
+      </button>
     </form>
   );
 };

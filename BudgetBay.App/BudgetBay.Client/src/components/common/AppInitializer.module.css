@@ -1,0 +1,56 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f3f4f6;
+    padding: 20px;
+}
+
+.card {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    text-align: center;
+    max-width: 500px;
+}
+
+.card h1 {
+    font-size: 1.8rem;
+    color: #b91c1c; /* Red */
+    margin-bottom: 1rem;
+}
+
+.card h2 {
+    font-size: 1.8rem;
+    color: #1f2937;
+    margin-bottom: 1rem;
+}
+
+.card p {
+    color: #4b5563;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.demoButton {
+    background-color: #6936f5;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+
+.demoButton:hover {
+    background-color: #5b21b6;
+}
+
+.demoButton:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}

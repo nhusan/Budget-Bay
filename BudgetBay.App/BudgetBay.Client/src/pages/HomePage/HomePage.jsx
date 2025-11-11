@@ -1,22 +1,12 @@
-import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { AuthContext } from "../../contexts/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import styles from "./HomePage.module.css";
 import SearchBar from "../../components/common/SearchBar";
 import CatalogProduct from "../../components/catalogproduct/CatalogProduct";
-import { getAllProducts } from "../../services/apiClient";
+import { useProducts } from "../../hooks/product.hooks";
 
 const HomePage = () => {
-  const { token, logout } = useContext(AuthContext);
-  const [products, setProducts] = useState([]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      const data = await getAllProducts();
-      setProducts(data);
-    };
-    fetchProducts();
-  }, []);
+  const { token } = useAuth();
+  const { data: products, isLoading, error } = useProducts();
 
   return (
     <main>
@@ -37,7 +27,9 @@ const HomePage = () => {
           <SearchBar />
         </div>
         <div className={styles.productListContainer}>
-          <CatalogProduct onHome={true} Products={products} />
+          {isLoading && <p>Loading products...</p>}
+          {error && <p>Error loading products: {error.message}</p>}
+          {products && <CatalogProduct onHome={true} Products={products} />}
         </div>
       </div>
     </main>

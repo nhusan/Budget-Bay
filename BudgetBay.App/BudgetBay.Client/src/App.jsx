@@ -11,17 +11,22 @@ import ProductEditPage from './pages/ProductEditPage/ProductEditPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
+import DemoModeBanner from './components/common/DemoModeBanner'; // <-- Import the new banner
 
 function App() {
+  // Check session storage to see if we are in demo mode
+  const isDemoMode = sessionStorage.getItem('demoMode') === 'true';
+
   return (
     <>
       <Header />
+      {/* Conditionally render the banner if in demo mode */}
+      {isDemoMode && <DemoModeBanner />}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<RegisterPage />} />
         <Route path="/search" element={<SearchResultsPage />} />
-        <Route path="/products/:productId" element={<ProductDetailsPage />} />
        
         
         <Route 
@@ -48,6 +53,7 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/products/:productId" element={<ProductDetailsPage />} />
       </Routes>
       <Footer />
     </>

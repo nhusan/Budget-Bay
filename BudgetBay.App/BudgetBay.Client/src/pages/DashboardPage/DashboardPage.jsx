@@ -1,15 +1,15 @@
-import { useState, useEffect, useContext, useCallback } from 'react';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../hooks/useAuth';
 import { 
-    getUserById, 
-    getUserAddress,
-    getUserProducts, 
-    getUserBids, 
-    getWonAuctions,
-    createUserAddress,
-    updateUserAddress,
-    uploadProfilePicture
-} from '../../services/apiClient';
+    useUser, 
+    useUserAddress, 
+    useUserProducts, 
+    useUserBids, 
+    useWonAuctions, 
+    useCreateUserAddress,
+    useUpdateUserAddress,
+    useUploadProfilePicture
+} from '../../hooks/user.hooks';
 import styles from './DashboardPage.module.css';
 
 import UserProfile from '../../components/dashboard/UserProfile';
@@ -29,65 +29,34 @@ const initialAddressState = {
 };
 
 const DashboardPage = () => {
-    const { user, token } = useContext(AuthContext);
-    const [userInfo, setUserInfo] = useState(null);
-    const [products, setProducts] = useState([]);
-    const [bids, setBids] = useState([]);
-    const [wonAuctions, setWonAuctions] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { user } = useAuth(); // <-- CORRECTED: Call the hook with ()
+    const userId = user?.sub;
 
+    // --- React Query Hooks for Data Fetching ---
+    const { data: userInfo, isLoading: isUserLoading, error: userError } = useUser(userId);
+    const { data: userAddress, isLoading: isAddressLoading, error: addressFetchError } = useUserAddress(userId);
+    const { data: products, isLoading: isProductsLoading, error: productsError } = useUserProducts(userId);
+    const { data: bids, isLoading: isBidsLoading, error: bidsError } = useUserBids(userId);
+    const { data: wonAuctions, isLoading: isWonAuctionsLoading, error: wonAuctionsError } = useWonAuctions(userId);
+
+    // --- React Query Hooks for Mutations ---
+    const createAddressMutation = useCreateUserAddress();
+    const updateAddressMutation = useUpdateUserAddress();
+    const uploadPictureMutation = useUploadProfilePicture();
+
+    // --- Local State for UI Control ---
     const [isEditingAddress, setIsEditingAddress] = useState(false);
     const [addressForm, setAddressForm] = useState(initialAddressState);
-    const [addressError, setAddressError] = useState('');
 
-    const [isUploading, setIsUploading] = useState(false);
-    const [uploadError, setUploadError] = useState('');
-
-
-    const fetchDashboardData = useCallback(async () => {
-        if (user && token) {
-            const userId = user.sub;
-            try {
-                if (!userInfo) setLoading(true); 
-                
-                const userData = await getUserById(userId, token);
-                let addressData = null;
-                try {
-                    addressData = await getUserAddress(userId, token);
-                } catch (e) {
-                    if (e.message.toLowerCase().includes('404') || e.message.toLowerCase().includes('not found')) {
-                         console.log("User does not have an address yet. The UI will prompt them to add one.");
-                    } else {
-                        throw e;
-                    }
-                }
-
-                const [productsData, bidsData, wonAuctionsData] = await Promise.all([
-                    getUserProducts(userId, token),
-                    getUserBids(userId, token),
-                    getWonAuctions(userId, token)
-                ]);
-
-                setUserInfo({ ...userData, address: addressData });
-                setProducts(productsData);
-                console.log(productsData);
-                setBids(bidsData);
-                setWonAuctions(wonAuctionsData);
-
-                setAddressForm(addressData || initialAddressState);
-
-            } catch (err) {
-                setError(err.message || 'Failed to fetch dashboard data.');
-            } finally {
-                setLoading(false);
-            }
-        }
-    }, [user, token, userInfo]);
-    
+    // Effect to populate the address form when data is fetched
     useEffect(() => {
-        fetchDashboardData();
-    }, [user, token]);
+        if (userAddress) {
+            setAddressForm(userAddress);
+        } else {
+            // If there's no address, reset to initial state
+            setAddressForm(initialAddressState);
+        }
+    }, [userAddress]);
 
     const handleAddressChange = (e) => {
         const { name, value } = e.target;
@@ -96,56 +65,46 @@ const DashboardPage = () => {
 
     const handleAddressSubmit = async (e) => {
         e.preventDefault();
-        setAddressError('');
-        const userId = user.sub;
-        
-        try {
-            if (userInfo.address) {
-                await updateUserAddress(userId, addressForm, token);
-            } else {
-                await createUserAddress(userId, addressForm, token);
-            }
-            setIsEditingAddress(false);
-            await fetchDashboardData(); 
-        } catch (err) {
-            setAddressError(err.message || "Failed to save address.");
-        }
+        const mutation = userAddress ? updateAddressMutation : createAddressMutation;
+        mutation.mutate({ userId, addressData: addressForm }, {
+            onSuccess: () => {
+                setIsEditingAddress(false);
+            },
+        });
     };
 
     const handleEditAddress = () => {
-        setAddressForm(userInfo?.address || initialAddressState);
+        setAddressForm(userAddress || initialAddressState);
         setIsEditingAddress(true);
     };
 
     const handleCancelEdit = () => {
         setIsEditingAddress(false);
-        setAddressError('');
+        createAddressMutation.reset();
+        updateAddressMutation.reset();
     };
 
     const handleProfilePictureChange = async (e) => {
         const file = e.target.files[0];
-        if (!file) return;
-    
-        setIsUploading(true);
-        setUploadError('');
-    
-        try {
-            await uploadProfilePicture(user.sub, file, token);
-            await fetchDashboardData(); // Re-fetch all data to get the new URL
-        } catch (err) {
-            setUploadError(err.message || 'Failed to upload profile picture.');
-        } finally {
-            setIsUploading(false);
-        }
+        if (!file || !userId) return;
+        uploadPictureMutation.mutate({ userId, file });
     };
+    
+    // --- Aggregated Loading and Error States ---
+    const isLoading = isUserLoading || isAddressLoading || isProductsLoading || isBidsLoading || isWonAuctionsLoading;
+    // Simplified error check, as 404s are no longer treated as errors for the address hook.
+    const queryError = userError || addressFetchError || productsError || bidsError || wonAuctionsError;
 
-    if (loading) { 
+    if (isLoading && !userInfo) { // Show loading skeleton only on initial load
         return <main><div className={styles.messageContainer}>Loading Dashboard...</div></main>
     } 
 
-    if (error) {
-        return <main><div className={styles.messageContainer}>Error: {error}</div></main>;
+    if (queryError) {
+        return <main><div className={styles.messageContainer}>Error: {queryError.message}</div></main>;
     }
+    
+    const combinedUserInfo = userInfo ? { ...userInfo, address: userAddress } : null;
+    const addressMutationError = createAddressMutation.error?.message || updateAddressMutation.error?.message;
 
     return (
         <main>
@@ -157,16 +116,16 @@ const DashboardPage = () => {
 
             <div className={styles.topGrid}>
                 <UserProfile 
-                    userInfo={userInfo}
+                    userInfo={combinedUserInfo}
                     onFileChange={handleProfilePictureChange}
-                    isUploading={isUploading}
-                    uploadError={uploadError}
+                    isUploading={uploadPictureMutation.isPending}
+                    uploadError={uploadPictureMutation.error?.message}
                 />
                 <UserAddress 
-                    userInfo={userInfo}
+                    userInfo={combinedUserInfo}
                     isEditing={isEditingAddress}
                     addressForm={addressForm}
-                    error={addressError}
+                    error={addressMutationError}
                     onEdit={handleEditAddress}
                     onCancel={handleCancelEdit}
                     onChange={handleAddressChange}
@@ -174,9 +133,9 @@ const DashboardPage = () => {
                 />
             </div>
 
-            <UserListings listings={products} />
-            <UserBids bids={bids} />
-            <WonAuctions auctions={wonAuctions} />
+            <UserListings listings={products || []} />
+            <UserBids bids={bids || []} />
+            <WonAuctions auctions={wonAuctions || []} />
         </div>
         </main>
     );

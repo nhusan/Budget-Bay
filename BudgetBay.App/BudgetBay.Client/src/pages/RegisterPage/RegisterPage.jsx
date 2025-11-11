@@ -1,34 +1,25 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { registerRequest } from "../../services/apiClient";
+import { useRegister } from "../../hooks/auth.hooks";
 import styles from './RegisterPage.module.css';
 
 const RegisterPage = () => {
     const [username, setUsername] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [successMessage, setSuccessMessage] = useState("");
     const navigate = useNavigate();
+
+    const registerMutation = useRegister();
 
     const handleRegister = async (e) => {
         e.preventDefault();
-        setError("");
-        setSuccessMessage("");
-        setLoading(true);
-        try {
-            await registerRequest(username, email, password);
-            setSuccessMessage("Registration successful! Redirecting to login...");
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-                navigate("/login");
-            }, 2000);
-        } catch (err) {
-            setError(err.message || "Registration failed. Please try again.");
-        } finally {
-            setLoading(false);
-        }
+        registerMutation.mutate({ username, email, password }, {
+            onSuccess: () => {
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
+            }
+        });
     };
 
     return (
@@ -72,11 +63,11 @@ const RegisterPage = () => {
                             />
                         </div>
                         
-                        {error && <p className={styles.errorMessage}>{error}</p>}
-                        {successMessage && <p className={styles.successMessage}>{successMessage}</p>}
+                        {registerMutation.isError && <p className={styles.errorMessage}>{registerMutation.error.message || "Registration failed."}</p>}
+                        {registerMutation.isSuccess && <p className={styles.successMessage}>Registration successful! Redirecting to login...</p>}
                         
-                        <button type="submit" className={styles.registerButton} disabled={loading || successMessage}>
-                            {loading ? 'Registering...' : 'Sign Up'}
+                        <button type="submit" className={styles.registerButton} disabled={registerMutation.isPending || registerMutation.isSuccess}>
+                            {registerMutation.isPending ? 'Registering...' : 'Sign Up'}
                         </button>
                     </form>
 

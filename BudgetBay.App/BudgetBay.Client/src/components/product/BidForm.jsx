@@ -1,4 +1,3 @@
-/*C:\Users\Husan\Projects\Revature\TeamBB-Budget-Bay\BudgetBay.App\BudgetBay.Client\src\components\product\BidForm.jsx*/
 import styles from '../../pages/ProductDetailsPage/ProductDetailsPage.module.css';
 
 const BidForm = ({ 

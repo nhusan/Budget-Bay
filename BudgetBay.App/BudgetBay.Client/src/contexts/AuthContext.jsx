@@ -1,12 +1,12 @@
 import { createContext, useState, useEffect, useMemo, useCallback } from 'react';
 import useLocalStorage from '../hooks/useLocalStorage';
-import { loginRequest } from '../services/apiClient';
+// No longer importing loginRequest here as it's handled by useLogin hook
 import { jwtDecode } from 'jwt-decode';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [loading, setLoading] = useState(false);
+    // Loading state is now managed by the useLogin hook via React Query
     const [token, setToken] = useLocalStorage('authToken', null);
     const [user, setUser] = useState(null);
 
@@ -36,19 +36,10 @@ export const AuthProvider = ({ children }) => {
     }, [token, setToken]);
 
 
-    const login = useCallback(async (email, password) => {
-        setLoading(true);
-        try {
-            const receivedToken = await loginRequest(email, password);
-            setToken(receivedToken); 
-            setLoading(false);
-            return true;
-        }
-        catch (e) {
-            console.error(e);
-            setLoading(false);
-            return false;
-        }
+    // The login function now simply accepts the token from the useLogin hook
+    // and sets it in the state. It is no longer responsible for the API call.
+    const login = useCallback((receivedToken) => {
+        setToken(receivedToken);
     }, [setToken]);
 
     const logout = useCallback(() => {
@@ -67,14 +58,14 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    // The context value no longer needs to provide a loading state.
     const value = useMemo(() => ({
         token,
         user,
-        loading,
         login,
         logout,
         isTokenExpired
-    }), [token, user, loading, login, logout, isTokenExpired]);
+    }), [token, user, login, logout, isTokenExpired]);
 
     return (
         <AuthContext.Provider value={value}>

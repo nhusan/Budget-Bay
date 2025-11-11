@@ -1,7 +1,4 @@
-import {useState} from 'react';
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GetHighestBidByProductId } from '../../services/apiClient';
 import styles from './CatalogItem.module.css';
 
 

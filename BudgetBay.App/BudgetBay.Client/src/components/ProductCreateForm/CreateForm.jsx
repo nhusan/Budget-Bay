@@ -1,113 +1,70 @@
-import { useContext, useState } from "react";
+import { useState } from "react";
 import "./CreateForm.css";
-import { AuthContext } from "../../contexts/AuthContext";
-import { BASE } from "../../services/apiClient";
+import { useAuth } from "../../hooks/useAuth";
+import { useCreateProduct } from "../../hooks/product.hooks";
+
+
+const initialFormData = {
+  name: "",
+  description: "",
+  imageUrl: "",
+  condition: "",
+  startTime: "",
+  endTime: "",
+  sellerId: "",
+  startingPrice: "0.01",
+  currentPrice: "0.01",
+};
 
 const CreateForm = () => {
-  const { token, user, logout } = useContext(AuthContext);
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-    imageUrl: "",
-    condition: "",
-    startTime: "",
-    endTime: "",
-    sellerId: "",
-    startingPrice: "0.01",
-    currentPrice: "0.01",
-  });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState(""); 
+  const { user, logout } = useAuth();
+  const [formData, setFormData] = useState({ ...initialFormData, sellerId: user?.sub || '' });
+  
+  const createProductMutation = useCreateProduct();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    const updatedFormData = {
-      ...formData,
-      sellerId: user ? user.sub : "",
-      [name]: value,
-    };
-    
-    // If starting price changes, update current price to match
-    if (name === "startingPrice") {
-      updatedFormData.currentPrice = value;
-    }
-    
-    setFormData(updatedFormData);
-  };
-
-  const handleDateTimeChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      sellerId: user ? user.sub : "",
-      [name]: value,
+    setFormData(prev => {
+        const updated = { ...prev, [name]: value };
+        // If starting price changes, update current price to match
+        if (name === "startingPrice") {
+            updated.currentPrice = value;
+        }
+        return updated;
     });
-    // Close the datetime picker after selection
-    e.target.blur();
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Clear any existing messages
-    setMessage("");
-    setMessageType("");
+    // Ensure sellerId is set
+    const finalFormData = { ...formData, sellerId: user?.sub };
 
-    try {
-      const response = await fetch(`${BASE}/product`, {
-        method: "POST",
-        body: JSON.stringify(formData),
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        setMessage("✅ Product created successfully!");
-        setMessageType("success");
-        // Reset form after successful submission
-        setFormData({
-          name: "",
-          description: "",
-          imageUrl: "",
-          condition: "",
-          startTime: "",
-          endTime: "",
-          sellerId: user ? user.sub : "",
-          startingPrice: "0.01",
-          currentPrice: "0.01",
-        });
-        
-        // Clear success message after 5 seconds
-        setTimeout(() => {
-          setMessage("");
-          setMessageType("");
-        }, 5000);
-      } else {
-        setMessage("❌ Failed to create product");
-        setMessageType("error");
+    createProductMutation.mutate(finalFormData, {
+      onSuccess: () => {
+        setFormData({ ...initialFormData, sellerId: user?.sub || '' }); // Reset form
+      },
+      onError: (error) => {
+        // Handle specific errors like token expiration
+        if (error.response?.status === 401) {
+          logout();
+        }
       }
-    } catch (error) {
-      console.error("Error:", error);
-      if (error.message === 'AUTHENTICATION_EXPIRED') {
-        setMessage("❌ Your session has expired. Please log in again.");
-        setMessageType("error");
-        logout(); // Clear the expired token
-      } else {
-        setMessage("❌ An error occurred while creating the product");
-        setMessageType("error");
-      }
-    }
+    });
   };
 
   return (
     <form className="create-form" onSubmit={handleSubmit}>
       
+      {createProductMutation.isSuccess && (
+        <div className="message success">
+          Product created successfully!
+        </div>
+      )}
 
-      {message && (
-        <div className={`message ${messageType}`}>
-          {message}
+      {createProductMutation.isError && (
+        <div className="message error">
+          Failed to create product: {createProductMutation.error.message}
         </div>
       )}
 
@@ -118,6 +75,7 @@ const CreateForm = () => {
         value={formData.name}
         onChange={handleChange}
         required
+        disabled={createProductMutation.isPending}
       />
 
       <label>Description</label>
@@ -126,6 +84,7 @@ const CreateForm = () => {
         value={formData.description}
         onChange={handleChange}
         required
+        disabled={createProductMutation.isPending}
       />
 
       <label>ImageUrl</label>
@@ -134,6 +93,7 @@ const CreateForm = () => {
         name="imageUrl" 
         value={formData.imageUrl}
         onChange={handleChange} 
+        disabled={createProductMutation.isPending}
       />
 
       <label>Condition</label>
@@ -142,6 +102,7 @@ const CreateForm = () => {
         value={formData.condition}
         onChange={handleChange}
         required
+        disabled={createProductMutation.isPending}
       >
         <option value="">Select Condition</option>
         <option value="New">New</option>
@@ -153,8 +114,9 @@ const CreateForm = () => {
         type="datetime-local"
         name="startTime"
         value={formData.startTime}
-        onChange={handleDateTimeChange}
+        onChange={handleChange}
         required
+        disabled={createProductMutation.isPending}
       />
 
       <label>End Time</label>
@@ -162,8 +124,9 @@ const CreateForm = () => {
         type="datetime-local"
         name="endTime"
         value={formData.endTime}
-        onChange={handleDateTimeChange}
+        onChange={handleChange}
         required
+        disabled={createProductMutation.isPending}
       />
 
       <label>Starting Price</label>
@@ -173,9 +136,14 @@ const CreateForm = () => {
         value={formData.startingPrice}
         onChange={handleChange}
         required
+        min="0.01"
+        step="0.01"
+        disabled={createProductMutation.isPending}
       />
 
-      <button type="submit">Create Product</button>
+      <button type="submit" disabled={createProductMutation.isPending}>
+        {createProductMutation.isPending ? 'Creating...' : 'Create Product'}
+      </button>
     </form>
   );
 };

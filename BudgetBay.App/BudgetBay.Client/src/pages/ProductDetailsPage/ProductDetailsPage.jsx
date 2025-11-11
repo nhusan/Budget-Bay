@@ -1,8 +1,7 @@
-/*C:\Users\Husan\Projects\Revature\TeamBB-Budget-Bay\BudgetBay.App\BudgetBay.Client\src\pages\ProductDetailsPage\ProductDetailsPage.jsx*/
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { getProductById, placeBid } from '../../services/apiClient';
-import { AuthContext } from '../../contexts/AuthContext';
+import { useProduct, usePlaceBid } from '../../hooks/product.hooks';
+import { useAuth } from '../../hooks/useAuth';
 import ProductDetails from '../../components/product/ProductDetails';
 import BidForm from '../../components/product/BidForm';
 import AuctionInfo from '../../components/product/AuctionInfo';
@@ -11,77 +10,60 @@ import styles from './ProductDetailsPage.module.css';
 
 const ProductDetailsPage = () => {
     const { productId } = useParams();
-    const [product, setProduct] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [bidError, setBidError] = useState('');
-    const [bidAmount, setBidAmount] = useState('');
-    const [isBidding, setIsBidding] = useState(false);
-
-    const { user, token } = useContext(AuthContext);
+    const { user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    
+    const [bidAmount, setBidAmount] = useState('');
 
-    const fetchProduct = useCallback(async () => {
-        try {
-            setError('');
-            setIsLoading(true);
-            const data = await getProductById(productId);
-            if (data.bids) {
-                data.bids.sort((a, b) => b.amount - a.amount);
-            }
-            console.log(data);
-            setProduct(data);
-        } catch (err) {
-            setError(err.message || 'Failed to fetch product details.');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [productId]);
-
-    useEffect(() => {
-        fetchProduct();
-    }, [fetchProduct]);
+    const { data: product, isLoading, error } = useProduct(productId);
+    const placeBidMutation = usePlaceBid();
 
     const handleBidSubmit = async (e) => {
         e.preventDefault();
-        setBidError('');
-
-        if (!user || !token) {
+        
+        if (!user) {
             navigate('/login', { state: { from: location } });
             return;
         }
 
         const bidValue = parseFloat(bidAmount);
         if (isNaN(bidValue) || bidValue <= product.currentPrice) {
-            setBidError(`Your bid must be higher than $${product.currentPrice.toFixed(2)}.`);
+            placeBidMutation.reset(); // Clear previous errors if any
+            // Manually set an error for frontend validation
+            placeBidMutation.mutate(null, { 
+                onError: () => {} // Suppress console error for this specific case
+            });
+             // A bit of a hack to set error state on the mutation without sending a request
+            placeBidMutation.error = new Error(`Your bid must be higher than $${product.currentPrice.toFixed(2)}.`);
             return;
         }
 
-        setIsBidding(true);
-        try {
-            const bidData = {
-                amount: bidValue,
-                bidderId: user.sub,
-            };
-            
-            await placeBid(productId, bidData, token);
-
-            setBidAmount(''); // Clear input on success
-            await fetchProduct(); // Refresh product data to show new bid
-        } catch (err) {
-            setBidError(err.message || 'Failed to place bid. Please try again.');
-        } finally {
-            setIsBidding(false);
-        }
+        const bidData = {
+            amount: bidValue,
+            bidderId: user.sub,
+        };
+        
+        placeBidMutation.mutate({ productId, bidData }, {
+            onSuccess: () => {
+                setBidAmount(''); // Clear input on success
+            },
+        });
     };
+
+    const sortedBids = useMemo(() => {
+        if (!product?.bids) return [];
+        // Create a new array to avoid mutating the cached data
+        return [...product.bids].sort((a, b) => b.amount - a.amount);
+    }, [product?.bids]);
+
 
     if (isLoading) {
         return <div className={styles.centeredMessage}>Loading product details...</div>;
     }
 
     if (error) {
-        return <div className={styles.centeredMessage}>Error: {error}</div>;
+        return <div className={styles.centeredMessage}>Error: {error.message}</div>;
     }
 
     if (!product) {
@@ -103,13 +85,13 @@ const ProductDetailsPage = () => {
                         product={product} 
                         isAuctionActive={isAuctionActive} 
                         onSubmit={handleBidSubmit} 
-                        error={bidError}
+                        error={placeBidMutation.error?.message}
                         bidAmount={bidAmount}
                         onBidChange={(e) => setBidAmount(e.target.value)}
-                        isBidding={isBidding}
+                        isBidding={placeBidMutation.isPending}
                         isLoggedIn={!!user}
                     />
-                    <BidHistory bidsList={product.bids || []} />
+                    <BidHistory bidsList={sortedBids} />
                 </div>
             </div>
         </div>

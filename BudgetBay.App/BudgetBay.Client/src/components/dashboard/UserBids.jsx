@@ -8,8 +8,8 @@ const UserBids = ({ bids }) => {
             {bids.length > 0 ? (
                 <div className={styles.contentGrid}>
                     {bids.map((bid, index) => (
-                        <Link to={`/products/${bid.productId}`}>
-                            <div key={`${bid.productId}-${index}`} className={styles.card}>
+                        <Link key={`${bid.productId}-${index}`} to={`/products/${bid.productId}`}>
+                            <div className={styles.card}>
                                 <h3>Bid on Product ID: {bid.productId}</h3>
                                 <p><strong>Amount:</strong> ${bid.amount.toFixed(2)}</p>
                             </div>
