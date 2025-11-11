@@ -1,18 +1,16 @@
-import styles from '../../pages/ProductDetailsPage/ProductDetailsPage.module.css';
-
 const AuctionInfo = ({ product, isAuctionActive }) => {
     return (
-        <section className={styles.widget}>
-            <div className={styles.auctionInfo}>
-                <div className={styles.priceContainer}>
-                    <span className={styles.infoLabel}>Current Bid</span>
-                    <p className={styles.currentPrice}>${product.currentPrice.toFixed(2)}</p>
+        <section className="card-base">
+            <div className="flex items-center gap-8 bg-slate-50 rounded-lg p-5">
+                <div className="flex-1">
+                    <span className="block text-sm text-text-muted font-medium mb-1">Current Bid</span>
+                    <p className="text-3xl font-bold text-primary">${product.currentPrice.toFixed(2)}</p>
                 </div>
                 {isAuctionActive && (
-                    <div className={styles.timerContainer}>
-                        <span className={styles.infoLabel}>Time Left</span>
+                    <div className="flex-1">
+                        <span className="block text-sm text-text-muted font-medium mb-1">Time Left</span>
                         {/* A real timer component would go here */}
-                        <p className={styles.timer}>--:--:--</p>
+                        <p className="text-2xl font-semibold text-text-base tabular-nums">--:--:--</p>
                     </div>
                 )}
             </div>

@@ -1,34 +1,27 @@
-import { useAuth } from "../../hooks/useAuth";
-import styles from "./HomePage.module.css";
 import SearchBar from "../../components/common/SearchBar";
 import CatalogProduct from "../../components/catalogproduct/CatalogProduct";
 import { useProducts } from "../../hooks/product.hooks";
 
 const HomePage = () => {
-  const { token } = useAuth();
   const { data: products, isLoading, error } = useProducts();
 
   return (
-    <main>
-      <div className={styles.homepageContainer}>
-        <div className={styles.headerBlock}></div>
-        {token ? (
-          <div>
-            <h1>Welcome Back!</h1>
-            <p>You are logged in.</p>
-          </div>
-        ) : (
-          <div>
-            <h1>Welcome to BudgetBay</h1>
-            <p>Please log in to manage your budget.</p>
-          </div>
-        )}
-        <div className={styles.searchBarContainer}>
-          <SearchBar />
+    <main className="bg-background">
+      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
+        <div className="py-16">
+          <h1 className="text-5xl font-extrabold text-text-base mb-4 tracking-tight">
+            Find Your Next Great Deal
+          </h1>
+          <p className="text-xl text-text-muted max-w-2xl mx-auto">
+            BudgetBay is the ultimate online auction marketplace. Bid on unique items or list your own for sale.
+          </p>
         </div>
-        <div className={styles.productListContainer}>
-          {isLoading && <p>Loading products...</p>}
-          {error && <p>Error loading products: {error.message}</p>}
+        
+        <SearchBar />
+
+        <div className="mt-8">
+          {isLoading && <p className="py-10 text-text-muted">Loading products...</p>}
+          {error && <p className="py-10 text-error">Error loading products: {error.message}</p>}
           {products && <CatalogProduct onHome={true} Products={products} />}
         </div>
       </div>

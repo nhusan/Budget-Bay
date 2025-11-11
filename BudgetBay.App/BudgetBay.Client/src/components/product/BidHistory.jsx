@@ -1,20 +1,17 @@
-import React from 'react';
-import styles from '../../pages/ProductDetailsPage/ProductDetailsPage.module.css';
-
 const BidHistory = ({ bidsList }) => {
   return (
-    <div className={styles.widget}>
-      <h3 className={styles.bidTitle}>Bid History</h3>
+    <div className="card-base">
+      <h3 className="text-xl font-semibold mb-3 text-text-base">Bid History</h3>
 
-      <div className={styles.bidListContainer}>
+      <div className="max-h-60 overflow-y-auto border border-border rounded-lg p-2">
         {(!bidsList || bidsList.length === 0) ? (
-          <p className={styles.noBids}>No bids yet.</p>
+          <p className="text-center text-text-muted py-4">No bids yet.</p>
         ) : (
-          <ul className={styles.bidList}>
+          <ul className="list-none m-0 p-0">
             {bidsList.map((bid, index) => (
-              <li key={index} className={styles.bidItem}>
-                <span className={styles.bidUsername}>{bid.username}</span>
-                <span className={styles.bidAmount}>${bid.amount.toFixed(2)}</span>
+              <li key={index} className="flex justify-between items-center py-2 px-1 border-b border-border last:border-b-0">
+                <span className="font-medium text-text-base">{bid.username}</span>
+                <span className="text-text-muted">${bid.amount.toFixed(2)}</span>
               </li>
             ))}
           </ul>

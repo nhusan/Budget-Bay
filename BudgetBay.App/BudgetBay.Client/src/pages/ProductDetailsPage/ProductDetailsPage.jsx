@@ -6,7 +6,6 @@ import ProductDetails from '../../components/product/ProductDetails';
 import BidForm from '../../components/product/BidForm';
 import AuctionInfo from '../../components/product/AuctionInfo';
 import BidHistory from '../../components/product/BidHistory';
-import styles from './ProductDetailsPage.module.css';
 
 const ProductDetailsPage = () => {
     const { productId } = useParams();
@@ -59,42 +58,42 @@ const ProductDetailsPage = () => {
 
 
     if (isLoading) {
-        return <div className={styles.centeredMessage}>Loading product details...</div>;
+        return <main className="text-center text-lg text-text-muted py-16">Loading product details...</main>;
     }
 
     if (error) {
-        return <div className={styles.centeredMessage}>Error: {error.message}</div>;
+        return <main className="text-center text-lg text-error py-16">Error: {error.message}</main>;
     }
 
     if (!product) {
-        return <div className={styles.centeredMessage}>Product not found.</div>;
+        return <main className="text-center text-lg text-text-muted py-16">Product not found.</main>;
     }
 
     const isAuctionActive = new Date(product.endTime) > new Date();
 
     return (
-        <main>
-        <div className={styles.productDetailsContainer}>
-            <div className={styles.layoutGrid}>
-                <div className={styles.mainContent}>
-                    <ProductDetails product={product} />
-                </div>
-                <div className={styles.sidebarContent}>
-                    <AuctionInfo product={product} isAuctionActive={isAuctionActive} />
-                    <BidForm 
-                        product={product} 
-                        isAuctionActive={isAuctionActive} 
-                        onSubmit={handleBidSubmit} 
-                        error={placeBidMutation.error?.message}
-                        bidAmount={bidAmount}
-                        onBidChange={(e) => setBidAmount(e.target.value)}
-                        isBidding={placeBidMutation.isPending}
-                        isLoggedIn={!!user}
-                    />
-                    <BidHistory bidsList={sortedBids} />
+        <main className="py-8">
+            <div className="max-w-6xl mx-auto px-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div className="flex flex-col gap-8">
+                        <ProductDetails product={product} />
+                    </div>
+                    <div className="flex flex-col gap-8">
+                        <AuctionInfo product={product} isAuctionActive={isAuctionActive} />
+                        <BidForm 
+                            product={product} 
+                            isAuctionActive={isAuctionActive} 
+                            onSubmit={handleBidSubmit} 
+                            error={placeBidMutation.error?.message}
+                            bidAmount={bidAmount}
+                            onBidChange={(e) => setBidAmount(e.target.value)}
+                            isBidding={placeBidMutation.isPending}
+                            isLoggedIn={!!user}
+                        />
+                        <BidHistory bidsList={sortedBids} />
+                    </div>
                 </div>
             </div>
-        </div>
         </main>
     );
 };

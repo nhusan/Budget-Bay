@@ -1,63 +1,71 @@
+/* Import Tailwind's base, components, and utilities */
+@import "tailwindcss";
+
+/* Define your custom theme using the @theme directive */
+@theme {
+  --color-primary: #6936f5;
+  --color-primary-hover: #5b21b6;
+  --color-primary-focus: rgba(105, 54, 245, 0.2);
+
+  --color-secondary: #F5E536;
+  
+  --color-background: #f8fafc; /* A neutral off-white */
+  --color-surface: #ffffff; /* For cards, headers, etc. */
+  
+  --color-text-base: #1f2937;
+  --color-text-muted: #6b7280;
+  
+  --color-border: #e5e7eb;
+
+  --color-success: #10b981;
+  --color-error: #ef4444;
+}
+
+/* Apply base styles to the body */
 body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-        sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    background-color: #F5E536;
-    color: #333;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  background-color: var(--color-background);
+  color: var(--color-text-base);
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 main {
+    /* Adjust margin based on header height. This can be done with padding on the body too */
     margin-top: 5.2rem;
     flex-grow: 1;
 }
 
-#root {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
+/* Define reusable component styles in a layer */
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-white font-semibold py-2 px-5 rounded-lg transition-colors duration-200;
+  }
+  .btn-primary:hover {
+    @apply bg-primary-hover;
+  }
+  .btn-primary:disabled {
+    @apply bg-primary/50 cursor-not-allowed;
+  }
 
-button {
-    background-color: #6936f5;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.2s;
-}
+  .input-base {
+    @apply w-full p-3 border border-border rounded-lg shadow-sm;
+    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
+  }
 
-button:hover {
-    background-color: #0056b3;
-}
-
-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-}
-
-a {
-    color: #6936f5;
-    text-decoration: none;
-}
-
-a:hover {
-    text-decoration: underline;
-}
-
-input[type="text"],
-input[type="password"],
-input[type="email"] {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box; /* Important for padding and width to work together */
+  .card-base {
+    @apply bg-surface border border-border rounded-xl p-6 shadow-sm;
+  }
 }

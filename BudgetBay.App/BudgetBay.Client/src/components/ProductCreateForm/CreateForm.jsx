@@ -1,8 +1,6 @@
 import { useState } from "react";
-import "./CreateForm.css";
 import { useAuth } from "../../hooks/useAuth";
 import { useCreateProduct } from "../../hooks/product.hooks";
-
 
 const initialFormData = {
   name: "",
@@ -26,7 +24,6 @@ const CreateForm = () => {
     const { name, value } = e.target;
     setFormData(prev => {
         const updated = { ...prev, [name]: value };
-        // If starting price changes, update current price to match
         if (name === "startingPrice") {
             updated.currentPrice = value;
         }
@@ -36,113 +33,68 @@ const CreateForm = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Ensure sellerId is set
     const finalFormData = { ...formData, sellerId: user?.sub };
-
     createProductMutation.mutate(finalFormData, {
       onSuccess: () => {
-        setFormData({ ...initialFormData, sellerId: user?.sub || '' }); // Reset form
+        setFormData({ ...initialFormData, sellerId: user?.sub || '' });
       },
       onError: (error) => {
-        // Handle specific errors like token expiration
-        if (error.response?.status === 401) {
-          logout();
-        }
+        if (error.response?.status === 401) logout();
       }
     });
   };
 
+  const isPending = createProductMutation.isPending;
+
   return (
-    <form className="create-form" onSubmit={handleSubmit}>
-      
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
       {createProductMutation.isSuccess && (
-        <div className="message success">
+        <div className="p-3 rounded-md text-center font-medium bg-green-100 text-green-800 border border-green-200">
           Product created successfully!
         </div>
       )}
-
       {createProductMutation.isError && (
-        <div className="message error">
+        <div className="p-3 rounded-md text-center font-medium bg-red-100 text-red-800 border border-red-200">
           Failed to create product: {createProductMutation.error.message}
         </div>
       )}
-
-      <label>Name</label>
-      <input
-        type="text"
-        name="name"
-        value={formData.name}
-        onChange={handleChange}
-        required
-        disabled={createProductMutation.isPending}
-      />
-
-      <label>Description</label>
-      <textarea
-        name="description"
-        value={formData.description}
-        onChange={handleChange}
-        required
-        disabled={createProductMutation.isPending}
-      />
-
-      <label>ImageUrl</label>
-      <input 
-        type="text" 
-        name="imageUrl" 
-        value={formData.imageUrl}
-        onChange={handleChange} 
-        disabled={createProductMutation.isPending}
-      />
-
-      <label>Condition</label>
-      <select
-        name="condition"
-        value={formData.condition}
-        onChange={handleChange}
-        required
-        disabled={createProductMutation.isPending}
-      >
-        <option value="">Select Condition</option>
-        <option value="New">New</option>
-        <option value="Used">Used</option>
-      </select>
-
-      <label>Start Time</label>
-      <input
-        type="datetime-local"
-        name="startTime"
-        value={formData.startTime}
-        onChange={handleChange}
-        required
-        disabled={createProductMutation.isPending}
-      />
-
-      <label>End Time</label>
-      <input
-        type="datetime-local"
-        name="endTime"
-        value={formData.endTime}
-        onChange={handleChange}
-        required
-        disabled={createProductMutation.isPending}
-      />
-
-      <label>Starting Price</label>
-      <input
-        type="number"
-        name="startingPrice"
-        value={formData.startingPrice}
-        onChange={handleChange}
-        required
-        min="0.01"
-        step="0.01"
-        disabled={createProductMutation.isPending}
-      />
-
-      <button type="submit" disabled={createProductMutation.isPending}>
-        {createProductMutation.isPending ? 'Creating...' : 'Create Product'}
+      
+      <div>
+        <label htmlFor="name" className="block text-sm font-medium text-text-base mb-1">Name</label>
+        <input id="name" type="text" name="name" value={formData.name} onChange={handleChange} required disabled={isPending} className="input-base" />
+      </div>
+      <div>
+        <label htmlFor="description" className="block text-sm font-medium text-text-base mb-1">Description</label>
+        <textarea id="description" name="description" value={formData.description} onChange={handleChange} required disabled={isPending} className="input-base" rows="4" />
+      </div>
+      <div>
+        <label htmlFor="imageUrl" className="block text-sm font-medium text-text-base mb-1">Image URL</label>
+        <input id="imageUrl" type="text" name="imageUrl" value={formData.imageUrl} onChange={handleChange} disabled={isPending} className="input-base" />
+      </div>
+      <div>
+        <label htmlFor="condition" className="block text-sm font-medium text-text-base mb-1">Condition</label>
+        <select id="condition" name="condition" value={formData.condition} onChange={handleChange} required disabled={isPending} className="input-base">
+          <option value="">Select Condition</option>
+          <option value="New">New</option>
+          <option value="Used">Used</option>
+        </select>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor="startTime" className="block text-sm font-medium text-text-base mb-1">Start Time</label>
+          <input id="startTime" type="datetime-local" name="startTime" value={formData.startTime} onChange={handleChange} required disabled={isPending} className="input-base" />
+        </div>
+        <div>
+          <label htmlFor="endTime" className="block text-sm font-medium text-text-base mb-1">End Time</label>
+          <input id="endTime" type="datetime-local" name="endTime" value={formData.endTime} onChange={handleChange} required disabled={isPending} className="input-base" />
+        </div>
+      </div>
+      <div>
+        <label htmlFor="startingPrice" className="block text-sm font-medium text-text-base mb-1">Starting Price ($)</label>
+        <input id="startingPrice" type="number" name="startingPrice" value={formData.startingPrice} onChange={handleChange} required min="0.01" step="0.01" disabled={isPending} className="input-base" />
+      </div>
+      <button type="submit" disabled={isPending} className="btn-primary w-full mt-2">
+        {isPending ? 'Creating...' : 'Create Product'}
       </button>
     </form>
   );
