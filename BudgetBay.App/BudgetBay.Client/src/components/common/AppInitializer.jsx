@@ -1,9 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import { checkBackendStatus } from '../../lib/healthCheck';
 import { startMockWorker } from '../../mocks';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Loader2, ServerOff } from 'lucide-react'; // <-- Import new icons
+import logoIcon from '../../assets/logo-icon-only.png'; // <-- Import logo
 
 const AppInitializer = ({ children }) => {
   const [status, setStatus] = useState('checking'); 
+  const [attempt, setAttempt] = useState(1);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -19,7 +24,7 @@ const AppInitializer = ({ children }) => {
         const isMockServerReady = await checkBackendStatus();
         setStatus(isMockServerReady ? 'online' : 'offline');
       } else {
-        const isLiveServerOnline = await checkBackendStatus();
+        const isLiveServerOnline = await checkBackendStatus((num) => setAttempt(num));
         setStatus(isLiveServerOnline ? 'online' : 'offline');
       }
     };
@@ -32,34 +37,58 @@ const AppInitializer = ({ children }) => {
     window.location.reload();
   };
 
-  const LoadingCard = ({ title, message }) => (
+  // Improved StatusCard with branding and better icons
+  const StatusCard = ({ title, message, children = null, icon: IconComponent }) => (
     <div className="flex justify-center items-center min-h-screen bg-background p-5">
-      <div className="bg-surface p-10 rounded-xl shadow-lg text-center max-w-md w-full">
-        <h2 className="text-2xl font-bold text-text-base mb-4">{title}</h2>
-        <p className="text-text-muted leading-relaxed">{message}</p>
-      </div>
+      <Card className="text-center max-w-md w-full">
+        <CardHeader className="items-center space-y-4">
+          <img src={logoIcon} alt="BudgetBay Logo" className="h-12 w-12" />
+          <CardTitle className="text-2xl">{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {IconComponent && (
+            <div className="flex justify-center mb-6">
+              <IconComponent />
+            </div>
+          )}
+          <p className="text-muted-foreground leading-relaxed">{message}</p>
+          {children && <div className="mt-6">{children}</div>}
+        </CardContent>
+      </Card>
     </div>
   );
 
   if (status === 'checking') {
-    return <LoadingCard title="Connecting to Server..." message="Please wait while we check the backend status." />;
+    return (
+      <StatusCard 
+        title="Connecting to Server" 
+        message={`Please wait while we check the backend status. (Attempt ${attempt} of 3)`}
+        icon={() => <Loader2 className="h-10 w-10 text-primary animate-spin" />}
+      />
+    );
   }
 
   if (status === 'initializing_mock') {
-    return <LoadingCard title="Starting Demo Mode..." message="Please wait while we prepare the application." />;
+    return (
+      <StatusCard 
+        title="Starting Demo Mode" 
+        message="Please wait while we prepare the application." 
+        icon={() => <Loader2 className="h-10 w-10 text-primary animate-spin" />}
+      />
+    );
   }
 
   if (status === 'offline') {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-background p-5">
-        <div className="bg-surface p-10 rounded-xl shadow-lg text-center max-w-md w-full">
-          <h1 className="text-3xl font-bold text-error mb-4">Server Unavailable</h1>
-          <p className="text-text-muted leading-relaxed mb-6">We couldn't connect to the backend. You can continue with limited functionality in demo mode.</p>
-          <button onClick={handleStartDemoMode} className="btn-primary w-full">
-            Continue in Demo Mode
-          </button>
-        </div>
-      </div>
+      <StatusCard 
+        title="Server Unavailable" 
+        message="We couldn't connect to the backend. You can continue with limited functionality in demo mode."
+        icon={() => <ServerOff className="h-10 w-10 text-destructive" />}
+      >
+        <Button onClick={handleStartDemoMode} className="w-full">
+          Continue in Demo Mode
+        </Button>
+      </StatusCard>
     );
   }
 

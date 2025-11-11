@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/Button';
+
 const DemoModeBanner = () => {
     const handleSwitchToLive = () => {
         sessionStorage.removeItem('demoMode');
@@ -5,13 +7,13 @@ const DemoModeBanner = () => {
     };
 
     return (
-        <div className="w-full bg-primary text-white flex justify-center items-center py-2 px-5 gap-5 text-sm">
+        <div className="w-full bg-primary text-primary-foreground flex justify-center items-center py-2 px-5 gap-5 text-sm opacity-100">
             <p className="m-0">
                 You are currently in <strong>Demo Mode</strong>. Some features may be limited.
             </p>
-            <button onClick={handleSwitchToLive} className="bg-white text-primary border border-transparent py-1 px-3 rounded-md cursor-pointer font-semibold transition-all hover:bg-gray-100">
+            <Button onClick={handleSwitchToLive} variant="secondary" size="sm" className="h-7">
                 Switch to Live Mode
-            </button>
+            </Button>
         </div>
     );
 };

@@ -5,14 +5,14 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto py-4 bg-slate-100 border-t border-border">
+    <footer className="mt-auto py-4 bg-muted border-t border-border">
       <div className="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center px-4 gap-4">
             <Link to="/" className="flex items-center gap-2">
                 <img src={logoIcon} alt="BudgetBay Icon" className="h-6 w-6" />
-                <span className="font-semibold text-text-base">Budget Bay</span>
+                <span className="font-semibold text-foreground">Budget Bay</span>
             </Link>
             <div className="text-center sm:text-right">
-                <p className="text-xs text-text-muted">&copy; {currentYear} Husankhuja Nizomkhujaev, Kush Gandhi, Ledya Bakloug, Matthew Schade, Matthew Sims, & Stephen Alvarez. All rights reserved.</p>
+                <p className="text-xs text-muted-foreground">&copy; {currentYear} Husankhuja Nizomkhujaev, Kush Gandhi, Ledya Bakloug, Matthew Schade, Matthew Sims, & Stephen Alvarez. All rights reserved.</p>
             </div>
       </div>
     </footer>

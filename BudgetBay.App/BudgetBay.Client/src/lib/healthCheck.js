@@ -3,13 +3,15 @@ import { BASE_URL } from './api';
 
 /**
  * Checks if the backend server is responsive with retries and a timeout.
+ * @param {function(number): void} [onAttempt] - Optional callback that receives the current attempt number.
  * @returns {Promise<boolean>} - True if the backend is online, false otherwise.
  */
-export const checkBackendStatus = async () => {
+export const checkBackendStatus = async (onAttempt = () => {}) => {
   const retries = 3;
   const timeout = 10000; // 10 seconds
 
   for (let i = 0; i < retries; i++) {
+    onAttempt(i + 1); // <-- Report the current attempt number
     try {
       // Use a dedicated '/health' endpoint if available, otherwise any fast endpoint works.
       await axios.get(`${BASE_URL}/health`, { timeout });

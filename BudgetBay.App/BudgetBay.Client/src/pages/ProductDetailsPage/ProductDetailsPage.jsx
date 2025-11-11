@@ -58,15 +58,15 @@ const ProductDetailsPage = () => {
 
 
     if (isLoading) {
-        return <main className="text-center text-lg text-text-muted py-16">Loading product details...</main>;
+        return <main className="text-center text-lg text-muted-foreground py-16">Loading product details...</main>;
     }
 
     if (error) {
-        return <main className="text-center text-lg text-error py-16">Error: {error.message}</main>;
+        return <main className="text-center text-lg text-destructive py-16">Error: {error.message}</main>;
     }
 
     if (!product) {
-        return <main className="text-center text-lg text-text-muted py-16">Product not found.</main>;
+        return <main className="text-center text-lg text-muted-foreground py-16">Product not found.</main>;
     }
 
     const isAuctionActive = new Date(product.endTime) > new Date();

@@ -67,7 +67,7 @@ const DashboardPage = () => {
     const queryError = userError || addressFetchError || productsError || bidsError || wonAuctionsError;
 
     if (isLoading && !userInfo) return <main><div className="text-center p-10">Loading Dashboard...</div></main>
-    if (queryError) return <main><div className="text-center p-10 text-error">Error: {queryError.message}</div></main>;
+    if (queryError) return <main><div className="text-center p-10 text-destructive">Error: {queryError.message}</div></main>;
     
     const combinedUserInfo = userInfo ? { ...userInfo, address: userAddress } : null;
     const addressMutationError = createAddressMutation.error?.message || updateAddressMutation.error?.message;
@@ -76,8 +76,8 @@ const DashboardPage = () => {
         <main className="bg-background">
             <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
                 <header className="text-center">
-                    <h1 className="text-4xl lg:text-5xl font-bold text-text-base mb-2">Welcome, {userInfo?.username || 'User'}!</h1>
-                    <p className="text-lg text-text-muted">Manage your account, listings, and bids all in one place.</p>
+                    <h1 className="text-4xl lg:text-5xl font-bold text-foreground mb-2">Welcome, {userInfo?.username || 'User'}!</h1>
+                    <p className="text-lg text-muted-foreground">Manage your account, listings, and bids all in one place.</p>
                 </header>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
@@ -89,7 +89,7 @@ const DashboardPage = () => {
                             uploadError={uploadPictureMutation.error?.message}
                         />
                     </div>
-                    <div className="lg:col-span-2 card-base">
+                    <div className="lg:col-span-2">
                         <UserAddress 
                             userInfo={combinedUserInfo}
                             isEditing={isEditingAddress}

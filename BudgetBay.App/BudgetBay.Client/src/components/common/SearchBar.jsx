@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 const SearchBar = () => {
     const [query, setQuery] = useState('');
@@ -13,17 +15,15 @@ const SearchBar = () => {
     };
 
     return (
-        <form onSubmit={handleSubmit} className="flex items-center w-full max-w-3xl mx-auto my-5 border border-border rounded-lg bg-surface overflow-hidden focus-within:ring-2 focus-within:ring-primary focus-within:border-transparent transition-all">
-            <input
+        <form onSubmit={handleSubmit} className="flex w-full items-center space-x-2">
+            <Input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search for items..."
-                className="flex-grow p-4 text-lg bg-transparent border-none outline-none text-text-base placeholder-text-muted"
+                className="flex-grow text-base" // shadcn inputs are smaller by default
             />
-            <button type="submit" className="px-6 py-4 text-lg font-medium text-white bg-primary border-none cursor-pointer transition-colors hover:bg-primary-hover">
-                Search
-            </button>
+            <Button type="submit">Search</Button>
         </form>
     );
 };

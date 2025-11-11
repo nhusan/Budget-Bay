@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import CatalogItem from "../catalogitem/CatalogItem";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 
 const CatalogProduct = ({ Products, name, onHome }) => {
   const [FilteredProducts, setFilteredProducts] = useState([]);
@@ -15,22 +16,38 @@ const CatalogProduct = ({ Products, name, onHome }) => {
     }
   }, [Products, name]);
 
+  if (onHome) {
+    // Render without a wrapping card on the homepage for a cleaner look
+    return (
+        <div className="space-y-4">
+            {FilteredProducts.length > 0 ? (
+                FilteredProducts.map((product) => (
+                    <CatalogItem key={product.id} Product={product} />
+                ))
+            ) : (
+                <p className="text-center text-muted-foreground py-8">No products found.</p>
+            )}
+        </div>
+    );
+  }
+
   return (
-    <div className="bg-surface p-6 rounded-lg shadow-lg max-w-5xl mx-auto my-8 space-y-4">
-      {!onHome && (
-        <h3 className="text-xl font-semibold text-text-base pb-4 border-b border-border">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-xl">
           {FilteredProducts.length} Results for "{name}"
-        </h3>
-      )}
-      
-      {FilteredProducts.length > 0 ? (
-        FilteredProducts.map((product) => (
-          <CatalogItem key={product.id} Product={product} />
-        ))
-      ) : (
-        <p className="text-center text-text-muted py-8">No products found.</p>
-      )}
-    </div>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {FilteredProducts.length > 0 ? (
+          FilteredProducts.map((product) => (
+            <CatalogItem key={product.id} Product={product} />
+          ))
+        ) : (
+          <p className="text-center text-muted-foreground py-8">No products found.</p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

@@ -9,10 +9,10 @@ const HomePage = () => {
     <main className="bg-background">
       <div className="max-w-6xl mx-auto px-4 py-8 text-center">
         <div className="py-16">
-          <h1 className="text-5xl font-extrabold text-text-base mb-4 tracking-tight">
+          <h1 className="text-5xl font-extrabold text-foreground mb-4 tracking-tight">
             Find Your Next Great Deal
           </h1>
-          <p className="text-xl text-text-muted max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             BudgetBay is the ultimate online auction marketplace. Bid on unique items or list your own for sale.
           </p>
         </div>
@@ -20,8 +20,8 @@ const HomePage = () => {
         <SearchBar />
 
         <div className="mt-8">
-          {isLoading && <p className="py-10 text-text-muted">Loading products...</p>}
-          {error && <p className="py-10 text-error">Error loading products: {error.message}</p>}
+          {isLoading && <p className="py-10 text-muted-foreground">Loading products...</p>}
+          {error && <p className="py-10 text-destructive">Error loading products: {error.message}</p>}
           {products && <CatalogProduct onHome={true} Products={products} />}
         </div>
       </div>
